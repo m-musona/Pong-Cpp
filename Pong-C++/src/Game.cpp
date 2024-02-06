@@ -3,7 +3,9 @@
 
 const int thickness = 15;
 const float paddleHeight = 100.0f;
-
+const float screenWidth = 1024.0f;
+const float screenHeight = 720.0f;
+const float ballspeedmultiplier = 0.1f;
 
 
 Game::Game()
@@ -25,11 +27,11 @@ bool Game::Initialize()
 	}
 	// Create window
 	mWindow = SDL_CreateWindow(
-		"Game Programimming in C++ (Chapter 1)", // Window Title
-		100, // Top left x-coordinate of window
-		100, // Top left y-coordinate of window
-		1024, // Width of window
-		720, // Height of window
+		"Pong C++", // Window Title
+		0, // Top left x-coordinate of window
+		0, // Top left y-coordinate of window
+		static_cast<int>(screenWidth), // Width of window
+		static_cast<int>(screenHeight), // Height of window
 		0 // Flags (0 for no flags set)
 	);
 	// Verify that window created succsefully
@@ -40,14 +42,8 @@ bool Game::Initialize()
 	}
 
 	// Set Background color to blue and objects to white
-	mBackgroundColor.r = 0;
-	mBackgroundColor.g = 0;
-	mBackgroundColor.b = 255;
-	mBackgroundColor.a = 255;
-	mObjectColor.r = 255;
-	mObjectColor.g = 255;
-	mObjectColor.b = 255;
-	mObjectColor.a = 255;
+	mBackgroundColor = { 0, 0, 255, 255 };
+	mObjectColor = { 255, 255, 255, 255 };
 
 
 	// Create renderer after creating window
@@ -58,11 +54,11 @@ bool Game::Initialize()
 	);
 
 	mPaddlePos.x = 10.0f;
-	mPaddlePos.y = 720.0f / 2.0f;
-	mPaddle2Pos.x = 990.0f;
-	mPaddle2Pos.y = 720.0f / 2.0f;
-	mBallPos.x = 1024.0f / 2.0f;
-	mBallPos.y = 720.0f / 2.0f;
+	mPaddlePos.y = screenHeight / 2.0f;
+	mPaddle2Pos.x = screenWidth - 10.0f;
+	mPaddle2Pos.y = screenHeight / 2.0f;
+	mBallPos.x = screenWidth / 2.0f;
+	mBallPos.y = screenHeight / 2.0f;
 	mBallVel.x = -200.0f;
 	mBallVel.y = 235.0f;
 
@@ -141,67 +137,16 @@ void Game::ProcessInput()
 		mPaddle2Dir += 1;
 	}
 
-	// Change Color on pressing M, N, B, or V
-	if (state[SDL_SCANCODE_M])
-	{
-		mBackgroundColor.r = 189;
-		mBackgroundColor.g = 123;
-		mBackgroundColor.b = 157; 
-		mBackgroundColor.a = 255;
+	// Change Color on pressing M, N, B, V or C
+	changeBgColrObjColr(state[SDL_SCANCODE_M], { 189, 123, 157, 255 }, { 255, 255, 255, 255 });
+	
+	changeBgColrObjColr(state[SDL_SCANCODE_N], { 0, 0, 0, 255 }, { 255, 255, 255, 255 });
 
-		mObjectColor.r = 255;
-		mObjectColor.g = 255;
-		mObjectColor.b = 255;
-		mObjectColor.a = 255;
-	} 
-	if (state[SDL_SCANCODE_N])
-	{
-		mBackgroundColor.r = 0;
-		mBackgroundColor.g = 0;
-		mBackgroundColor.b = 0;
-		mBackgroundColor.a = 255;
+	changeBgColrObjColr(state[SDL_SCANCODE_B], { 113, 203, 38, 255 }, { 255, 255, 255, 255 });
 
-		mObjectColor.r = 255;
-		mObjectColor.g = 255;
-		mObjectColor.b = 255;
-		mObjectColor.a = 255;
-	}
-	if (state[SDL_SCANCODE_B])
-	{
-		mBackgroundColor.r = 113;
-		mBackgroundColor.g = 203;
-		mBackgroundColor.b = 38;
-		mBackgroundColor.a = 255;
+	changeBgColrObjColr(state[SDL_SCANCODE_V], { 255, 123, 0, 255 }, { 255, 255, 255, 255 });
 
-		mObjectColor.r = 255;
-		mObjectColor.g = 255;
-		mObjectColor.b = 255;
-		mObjectColor.a = 255;
-	}
-	if (state[SDL_SCANCODE_V])
-	{
-		mBackgroundColor.r = 255;
-		mBackgroundColor.g = 123;
-		mBackgroundColor.b = 0;
-		mBackgroundColor.a = 255;
-
-		mObjectColor.r = 255;
-		mObjectColor.g = 255;
-		mObjectColor.b = 255;
-		mObjectColor.a = 255;
-	}
-	if (state[SDL_SCANCODE_C])
-	{
-		mBackgroundColor.r = 0;
-		mBackgroundColor.g = 0;
-		mBackgroundColor.b = 255;
-		mBackgroundColor.a = 255;
-
-		mObjectColor.r = 255;
-		mObjectColor.g = 255;
-		mObjectColor.b = 255;
-		mObjectColor.a = 255;
-	}
+	changeBgColrObjColr(state[SDL_SCANCODE_C], { 0, 0, 255, 255 }, { 255, 255, 255, 255 });
 
 }
 
@@ -234,9 +179,9 @@ void Game::UpdateGame()
 		{
 			mPaddlePos.y = paddleHeight / 2.0f + thickness;
 		}
-		else if (mPaddlePos.y > (720.0f - paddleHeight / 2.0f - thickness))
+		else if (mPaddlePos.y > (screenHeight - paddleHeight / 2.0f - thickness))
 		{
-			mPaddlePos.y = 720.0f - paddleHeight / 2.0f - thickness;
+			mPaddlePos.y = screenHeight - paddleHeight / 2.0f - thickness;
 		}
 
 	}
@@ -250,9 +195,9 @@ void Game::UpdateGame()
 		{
 			mPaddle2Pos.y = paddleHeight / 2.0f + thickness;
 		}
-		else if (mPaddle2Pos.y > (720.0f - paddleHeight / 2.0f - thickness))
+		else if (mPaddle2Pos.y > (screenHeight - paddleHeight / 2.0f - thickness))
 		{
-			mPaddle2Pos.y = 720.0f - paddleHeight / 2.0f - thickness;
+			mPaddle2Pos.y = screenHeight - paddleHeight / 2.0f - thickness;
 		}
 
 	}
@@ -280,14 +225,14 @@ void Game::UpdateGame()
 		mBallPos.x <= 25.0f && mBallPos.x >= 20.0f && // Ball is at the correct x-position
 		mBallVel.x < 0.0f) // The ball is moving to the left
 	{
-		mBallVel.x *= -1.0f;
+		mBallVel.x *= -1.0f - ballspeedmultiplier;
 	}
 	// if ball collides with paddle 2
 	if (diff2 <= paddleHeight / 2.0f && // Our y-difference is small enough
-		mBallPos.x <= 1000.0f && mBallPos.x >= 990.0f && // Ball is at the correct x-position
+		mBallPos.x <= screenWidth && mBallPos.x >= screenWidth - 10.0f && // Ball is at the correct x-position
 		mBallVel.x > 0.0f) // The ball is moving to the Right
 	{
-		mBallVel.x *= -1.0f;
+		mBallVel.x *= -1.0f + ballspeedmultiplier;
 	}
 	// Did the ball go off the screen? (if so, end game)
 	else if (mBallPos.x <= 0.0f)
@@ -295,7 +240,7 @@ void Game::UpdateGame()
 		std::cout << "Game Ended Right Player Wins" << std::endl;
 		mIsRunning = false;
 	}
-	else if (mBallPos.x >= 1024.0f)
+	else if (mBallPos.x >= screenWidth)
 	{
 		std::cout << "Game Ended Left Player Wins" << std::endl;
 		mIsRunning = false;
@@ -303,12 +248,12 @@ void Game::UpdateGame()
 	// Did the ball collide with the top wall?
 	if (mBallPos.y <= thickness && mBallVel.y < 0.0f)
 	{
-		mBallVel.y *= -1;
+		mBallVel.y *= -1 + ballspeedmultiplier;
 	}
 	// Did the ball collide with the bottom wall?
-	else if (mBallPos.y >= (768 - thickness) && mBallVel.y > 0.0f)
+	else if (mBallPos.y >= (static_cast<int>(screenHeight) - thickness) && mBallVel.y > 0.0f)
 	{
-		mBallVel.y *= -1;
+		mBallVel.y *= -1 - ballspeedmultiplier;
 	}
 }
 void Game::GenerateOutput()
@@ -330,13 +275,13 @@ void Game::GenerateOutput()
 	SDL_Rect wall{
 		0,			// Top left x
 		0,			// Top left y
-		1024,		// Width
+		static_cast<int>(screenWidth),		// Width
 		thickness	// Height
 	};
 	SDL_RenderFillRect(mRenderer, &wall);
 
 	// Draw bottom wall
-	wall.y = 768 - thickness;
+	wall.y = static_cast<int>(screenHeight) - thickness;
 	SDL_RenderFillRect(mRenderer, &wall);
 
 	// Draw paddle
@@ -370,4 +315,13 @@ void Game::GenerateOutput()
 	SDL_RenderPresent(mRenderer);
 
 
+}
+
+void Game::changeBgColrObjColr(Uint8 KeybordState, Vector4 bgColr, Vector4 objColr)
+{
+	if (KeybordState)
+	{
+		mBackgroundColor = bgColr;
+		mObjectColor = objColr;
+	}
 }

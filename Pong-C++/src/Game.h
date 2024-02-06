@@ -53,4 +53,6 @@ private:
 
 	// Game should continue to run
 	bool mIsRunning;
+
+	void changeBgColrObjColr(Uint8 KeybordState, Vector4 bgColr, Vector4 objColr);
 };
