@@ -1,5 +1,6 @@
 #pragma once
 #include "Game.h"
+#include <random>
 
 const int thickness = 15;
 const float paddleHeight = 100.0f;
@@ -9,7 +10,14 @@ const float ballspeedmultiplier = 0.1f;
 
 
 Game::Game()
-	: mWindow(nullptr), mIsRunning(true), mTicksCount(0), mPaddleDir(0), mPaddle2Dir(0)
+	: mWindow(nullptr), 
+	mIsRunning(true), 
+	mTicksCount(0), 
+	mPaddleDir(0), 
+	mPaddle2Dir(0), 
+	mLeftPaddleScore(0), 
+	mRightPaddleScore(0), 
+	mGamePaused(false)
 {
 }
 
@@ -28,7 +36,7 @@ bool Game::Initialize()
 	// Create window
 	mWindow = SDL_CreateWindow(
 		"Pong C++", // Window Title
-		0, // Top left x-coordinate of window
+		300, // Top left x-coordinate of window
 		0, // Top left y-coordinate of window
 		static_cast<int>(screenWidth), // Width of window
 		static_cast<int>(screenHeight), // Height of window
@@ -53,14 +61,7 @@ bool Game::Initialize()
 		SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC // Flags (1st one is take advantage of graphics hardware 2nd one is vsync on)
 	);
 
-	mPaddlePos.x = 10.0f;
-	mPaddlePos.y = screenHeight / 2.0f;
-	mPaddle2Pos.x = screenWidth - 10.0f;
-	mPaddle2Pos.y = screenHeight / 2.0f;
-	mBallPos.x = screenWidth / 2.0f;
-	mBallPos.y = screenHeight / 2.0f;
-	mBallVel.x = -200.0f;
-	mBallVel.y = 235.0f;
+	resetPaddleAndBallPosition();
 
 	return true;
 }
@@ -108,6 +109,21 @@ void Game::ProcessInput()
 	if (state[SDL_SCANCODE_ESCAPE])
 	{
 		mIsRunning = false;
+	}
+
+	if (state[SDL_SCANCODE_SPACE])
+	{
+		if (mGamePaused) {
+			mBallVel = mBallVelHolder;
+			mGamePaused = false;
+		}
+		else 
+		{
+			mBallVelHolder = mBallVel;
+			mBallVel.x = 0.0f;
+			mBallVel.y = 0.0f;
+			mGamePaused = true;
+		}
 	}
 
 	// Reset paddle direction
@@ -237,13 +253,31 @@ void Game::UpdateGame()
 	// Did the ball go off the screen? (if so, end game)
 	else if (mBallPos.x <= 0.0f)
 	{
-		std::cout << "Game Ended Right Player Wins" << std::endl;
-		mIsRunning = false;
+		if (mRightPaddleScore < 5)
+		{
+			mRightPaddleScore++;
+			resetPaddleAndBallPosition();
+			std::cout << "Player Right Score is " << mRightPaddleScore << std::endl;
+		}
+		else 
+		{
+			std::cout << "Game Ended Right Player Wins" << std::endl;
+			mIsRunning = false;
+		}
 	}
 	else if (mBallPos.x >= screenWidth)
 	{
-		std::cout << "Game Ended Left Player Wins" << std::endl;
-		mIsRunning = false;
+		if (mLeftPaddleScore < 5)
+		{
+			mLeftPaddleScore++;
+			resetPaddleAndBallPosition();
+			std::cout << "Player Left Score is " << mLeftPaddleScore << std::endl;
+		}
+		else
+		{
+			std::cout << "Game Ended Left Player Wins" << std::endl;
+			mIsRunning = false;
+		}
 	}
 	// Did the ball collide with the top wall?
 	if (mBallPos.y <= thickness && mBallVel.y < 0.0f)
@@ -315,6 +349,29 @@ void Game::GenerateOutput()
 	SDL_RenderPresent(mRenderer);
 
 
+}
+
+void Game::resetPaddleAndBallPosition()
+{
+	float initialBallXVelocities[] = { -235.0f, 235.0f };
+
+	// Seed the random number generator
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<int> dis(0, 1);
+
+	// Generate a random index to select from initialBallXVelocities array
+	int index = dis(gen);
+
+	mPaddlePos.x = 10.0f;
+	mPaddlePos.y = screenHeight / 2.0f;
+	mPaddle2Pos.x = screenWidth - 10.0f;
+	mPaddle2Pos.y = screenHeight / 2.0f;
+	mBallPos.x = screenWidth / 2.0f;
+	mBallPos.y = screenHeight / 2.0f;
+
+	mBallVel.x = initialBallXVelocities[index];
+	mBallVel.y = 135.0f;
 }
 
 void Game::changeBgColrObjColr(Uint8 KeybordState, Vector4 bgColr, Vector4 objColr)

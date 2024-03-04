@@ -43,7 +43,7 @@ private:
 	SDL_Renderer* mRenderer;
 
 	// Position Vectors
-	Vector2 mPaddlePos, mPaddle2Pos, mBallPos, mBallVel;
+	Vector2 mPaddlePos, mPaddle2Pos, mBallPos, mBallVel, mBallVelHolder;
 
 	Vector4 mBackgroundColor, mObjectColor;
 
@@ -54,5 +54,9 @@ private:
 	// Game should continue to run
 	bool mIsRunning;
 
+	// Game Specific
+	bool mGamePaused;
+	int mLeftPaddleScore, mRightPaddleScore;
+	void resetPaddleAndBallPosition();
 	void changeBgColrObjColr(Uint8 KeybordState, Vector4 bgColr, Vector4 objColr);
 };
